@@ -1,0 +1,20 @@
+/* Modal Dialog */
+.k-dialog {
+  margin: 30px;
+  text-align: center;
+}
+
+/* Modal Dialog Actions */
+.k-dialog-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.flex-container {
+  display: flex;
+  align-items: center;
+}
+
+.row-item-margin{
+  margin-left: 8px;
+}

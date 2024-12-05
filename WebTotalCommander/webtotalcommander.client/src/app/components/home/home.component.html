@@ -1,0 +1,248 @@
+<!--begin:: Main div-->
+<div class="container">
+    <!--begin:: Secondary div-->
+    <div class="d-flex flex-wrap align-items-center justify-content-center mb-4">
+
+        <!--begin:: Add Folder-->
+        <button kendoButton class="me-1 ms-3" size="large" themeColor="primary" [svgIcon]="_iconsKendo.folderAddIcon"
+            type="button" (click)="openCreateFolderModal()">Create Folder</button>
+        <!--end:: Add Folder-->
+
+        <!--begin:: Upload File-->
+        <button kendoButton class="me-3 ms-1" size="large" themeColor="primary" [svgIcon]="_iconsKendo.fileAddIcon"
+            type="button" (click)="opneUploadFileModal()">Upload File</button>
+        <!--end:: Upload File-->
+
+        <!--begin::Third div-->
+        <div class="mt-2">
+            <button kendoButton [svgIcon]="_iconsKendo.arrowLeft" themeColor="primary" (click)="backFolder()"
+                class="me-2" [disabled]="isBackDisabled">
+                Back
+            </button>
+            <button kendoButton [svgIcon]="_iconsKendo.arrowRight" themeColor="primary" (click)="forwardFolder()"
+                class="me-2" [disabled]="isForwardDisabled">
+                Forward
+            </button>
+            <button kendoButton [svgIcon]="_iconsKendo.arrowUp" themeColor="primary" (click)="upFolder()"
+                [disabled]="isUpDisabled">
+                Up
+            </button>
+
+            <!--begin:: BreadCrumb-->
+            <kendo-breadcrumb [items]="transmitterBreadCrumbValue" (itemClick)="onBreadCrumbFolderClick($event)">
+            </kendo-breadcrumb>
+            <!--end:: BreadCrumb-->
+
+            <!--begin:: Grid Table-->
+            <kendo-grid (dblclick)="doubleClickFolderFile($event)" (cellClick)="cellClickHandler($event)"
+                [data]="gridView" [loading]="isLoading" [filter]="filterState.filter" filterable="menu"
+                (filterChange)="filterChange($event)" [sortable]="true" [sort]="sort" (sortChange)="sortChange($event)"
+                [pageSize]="pageSize" [skip]="skip" (pageChange)="pageChange($event)" [pageable]="{
+                            buttonCount: 5,
+                            info: true,
+                            type: 'numeric',
+                            pageSizes: [5,10,15,20,25,30,40,50,100],
+                            previousNext: true,
+                            position: 'bottom',      
+                            }">
+
+                <!--begin::Name Column-->
+                <kendo-grid-column title="Name" field="name" [sortable]="true">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <div class="flex-container">
+                            <div class="icon-container">
+                                <kendo-svgicon (click)="folderFileIconClick($event, dataItem)"
+                                    [icon]="_iconsKendo.getIconForExtension(dataItem.extension)"
+                                    size="large"></kendo-svgicon>
+                            </div>
+                            <div class="row-item-margin" kendoTypography fontSize="lg">{{ dataItem.name }}</div>
+                        </div>
+                    </ng-template>
+                </kendo-grid-column>
+                <!--end::Name Column-->
+
+                <!--begin::Created Date-->
+                <kendo-grid-column field="createdDate" title="Date modified">
+                    <ng-template kendoGridFilterMenuTemplate let-dataItem let-filter let-column="column"
+                        let-filterService="filterService">
+                        <kendo-grid-date-filter-menu [column]="column" [filter]="filter" [filterService]="filterService"
+                            format="yyyy/MM/dd hh:mm a">
+                            <kendo-filter-eq-operator></kendo-filter-eq-operator>
+                            <kendo-filter-neq-operator></kendo-filter-neq-operator>
+                            <kendo-filter-gte-operator></kendo-filter-gte-operator>
+                            <kendo-filter-gt-operator></kendo-filter-gt-operator>
+                            <kendo-filter-lte-operator></kendo-filter-lte-operator>
+                            <kendo-filter-lt-operator></kendo-filter-lt-operator>
+                        </kendo-grid-date-filter-menu>
+
+                    </ng-template>
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <div kendoTypography fontSize="lg">
+                            {{ dataItem.createdDate !== '1901-01-01T00:00:00' ? (dataItem.createdDate | date:
+                            'yyyy/MM/dd hh:mm a') : '--' }}
+                        </div>
+                    </ng-template>
+                </kendo-grid-column>
+                <!--end::Created Date-->
+
+                <!--begin::Type Column-->
+                <kendo-grid-column field="extension" title="Type">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <div kendoTypography fontSize="lg">{{dataItem.extension}}</div>
+                    </ng-template>
+                </kendo-grid-column>
+                <!--end::Type Column-->
+
+                <!--begin::Size Column-->
+                <kendo-grid-column field="size" title="Size">
+                    <ng-template kendoGridFilterMenuTemplate let-dataItem let-filter let-column="column"
+                        let-filterService="filterService">
+                        <kendo-grid-numeric-filter-menu [column]="column" [filter]="filter"
+                            [filterService]="filterService" [max]="100000000" [min]="0" [decimals]="0">
+                            <kendo-filter-eq-operator></kendo-filter-eq-operator>
+                            <kendo-filter-neq-operator></kendo-filter-neq-operator>
+                            <kendo-filter-gte-operator></kendo-filter-gte-operator>
+                            <kendo-filter-gt-operator></kendo-filter-gt-operator>
+                            <kendo-filter-lte-operator></kendo-filter-lte-operator>
+                            <kendo-filter-lt-operator></kendo-filter-lt-operator>
+                        </kendo-grid-numeric-filter-menu>
+                    </ng-template>
+
+
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <div *ngIf="dataItem.extension!=='folder' && dataItem.extension!==''" kendoTypography
+                            fontSize="lg">
+                            {{ dataItem.size | number:'1.' }} KB
+                        </div>
+                    </ng-template>
+                </kendo-grid-column>
+                <!--end::Size Column-->
+
+                <!--begin:: Action Column-->
+                <kendo-grid-column title="Action" [width]="300">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                        <div *ngIf="dataItem.extension==='folder'">
+                            <button kendoGridRemoveCommand [svgIcon]="_iconsKendo.deleteIcon" themeColor="primary"
+                                (click)="openDeleteModalFolder(dataItem.name)" class="me-4">Delete</button>
+                            <button kendoGridEditCommand [svgIcon]="_iconsKendo.downloadIcon" themeColor="primary"
+                                (click)="downloadFolderZip(dataItem.name)" class="me-4">Zip</button>
+                        </div>
+                        <div *ngIf="dataItem.extension==='.txt'">
+                            <button kendoGridRemoveCommand [svgIcon]="_iconsKendo.deleteIcon" themeColor="primary"
+                                (click)="openDeleteModalFile(dataItem.name)" class="me-4">Delete</button>
+                            <button kendoGridEditCommand [svgIcon]="_iconsKendo.editIcon" themeColor="primary"
+                                (click)="openEditTxtModal(dataItem.name)" class="me-4">Edit</button>
+                        </div>
+                        <div
+                            *ngIf="dataItem.extension!='folder' && dataItem.extension!='.txt' && dataItem.extension!=''">
+                            <button kendoGridRemoveCommand [svgIcon]="_iconsKendo.deleteIcon" themeColor="primary"
+                                (click)="openDeleteModalFile(dataItem.name)" class="me-4">Delete</button>
+                        </div>
+                    </ng-template>
+                </kendo-grid-column>
+                <!--end:: Action Column-->
+
+            </kendo-grid>
+            <!--end:: Grid Table-->
+
+        </div>
+        <!--end::Third div-->
+
+    </div>
+    <!--end:: Secondary div-->
+
+    <!--begin:: Modal Delete Folder-->
+    <div>
+        <kendo-dialog title="Please confirm" *ngIf="openedDeleteFolderModal" (close)="eventDeleteFolderModal('cancel')"
+            [minWidth]="250" [width]="450">
+            <p class="k-dialog">
+                Are you sure you want delete folder?
+            </p>
+            <kendo-dialog-actions>
+                <button kendoButton (click)="eventDeleteFolderModal('no')">No</button>
+                <button kendoButton (click)="eventDeleteFolderModal('yes')" themeColor="primary">
+                    Yes
+                </button>
+            </kendo-dialog-actions>
+        </kendo-dialog>
+    </div>
+    <!--end:: Modal Delete Folder-->
+
+    <!--begin:: Modal Delete File-->
+    <div>
+        <kendo-dialog title="Please confirm" *ngIf="openedDeleteFileModal" (close)="eventDeleteModalFile('cancel')"
+            [minWidth]="250" [width]="450">
+            <p style="margin: 30px; text-align: center;">
+                Are you sure you want delete file?
+            </p>
+            <kendo-dialog-actions>
+                <button kendoButton (click)="eventDeleteModalFile('no')">No</button>
+                <button kendoButton (click)="eventDeleteModalFile('yes')" themeColor="primary">
+                    Yes
+                </button>
+            </kendo-dialog-actions>
+        </kendo-dialog>
+    </div>
+    <!--end:: Modal Delete File-->
+
+    <!--begin:: Modal Edit Txt File-->
+    <div class="example-wrapper">
+        <kendo-window title="Please provide additional data" *ngIf="openedEditTxtModal" (close)="closeEditTxtModal()"
+            [minWidth]="550" [height]="750" [width]="850">
+            <kendo-window-titlebar>
+                <button kendoWindowMaximizeAction></button>
+                <button kendoWindowRestoreAction></button>
+                <button kendoWindowCloseAction></button>
+            </kendo-window-titlebar>
+            <form class="k-form">
+                <fieldset>
+                    <label class="k-form-field">
+                        <span>template.txt</span>
+                        <kendo-textarea [rows]="30" [(ngModel)]="txtFileContent" name="txtFileContent"></kendo-textarea>
+                    </label>
+                </fieldset>
+
+                <div class="k-actions k-actions-end">
+                    <button kendoButton type="button" (click)="closeEditTxtModal()">Cancel</button>
+                    <button kendoButton themeColor="primary" type="button" (click)="submitEditTxtModal()">
+                        Submit
+                    </button>
+                </div>
+            </form>
+        </kendo-window>
+    </div>
+    <!--end:: Modal Edit Txt File-->
+
+    <!--begin:: Modal Create Folder-->
+    <div>
+        <kendo-dialog title="Create new folder" *ngIf="openedCreateFolderModal" (close)="eventAddFolderModal('cancel')"
+            [minWidth]="250" [width]="450">
+            <kendo-formfield>
+                <kendo-label labelCssClass="k-form-label" [for]="firstName" text="Folder Name"></kendo-label>
+                <kendo-textbox [(ngModel)]="folderName" #firstName required></kendo-textbox>
+                <kendo-formerror></kendo-formerror>
+            </kendo-formfield>
+            <kendo-dialog-actions>
+                <button kendoButton (click)="eventAddFolderModal('add')" themeColor="primary"
+                    [svgIcon]="_iconsKendo.folderAddIcon">
+                    Create
+                </button>
+            </kendo-dialog-actions>
+        </kendo-dialog>
+    </div>
+    <!--end:: Modal Create Folder-->
+
+    <!--begin:: Modal Upload Files-->
+    <div>
+        <kendo-dialog title="Upload files" *ngIf="openedUploadFilesModal" (close)="closeUploadFilesModal()"
+            [minWidth]="250" [width]="450">
+            <kendo-upload [autoUpload]="false" [saveUrl]="saveUrl" [withCredentials]="true" actionsLayout="stretched"
+                (upload)="uploadEventHandler($event)" (success)="successEventHandler($event)"
+                (error)="errorEventHandler($event)">
+            </kendo-upload>
+        </kendo-dialog>
+    </div>
+    <!--end:: Modal Upload Files-->
+
+</div>
+<!--end:: Main div-->
